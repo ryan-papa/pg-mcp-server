@@ -37,6 +37,8 @@ from starlette.applications import Starlette
 from starlette.routing import Mount
 import uvicorn
 
+from server.oauth_compat import make_oauth_probe_routes
+
 @asynccontextmanager
 async def starlette_lifespan(app):
     logger.info("Starlette application starting up")
@@ -46,8 +48,10 @@ async def starlette_lifespan(app):
 
 if __name__ == "__main__":
     logger.info("Starting MCP server with SSE transport")
+    # OAuth 프로브 라우트는 Mount('/') 앞에 둬서 매칭 우선순위 확보 (server/oauth_compat.py).
+    routes = make_oauth_probe_routes() + [Mount('/', app=mcp.sse_app())]
     app = Starlette(
-        routes=[Mount('/', app=mcp.sse_app())],
+        routes=routes,
         lifespan=starlette_lifespan
     )
     
